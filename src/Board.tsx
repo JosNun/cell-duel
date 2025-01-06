@@ -1,5 +1,5 @@
 import { GameProps, RuleItem } from "./Game";
-import { cx } from "@emotion/css";
+import { css, cx } from "@emotion/css";
 
 export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
   return (
@@ -10,12 +10,10 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
           <div
             key={index}
             className={cx(
-              "aspect-square border border-red-300 flex items-center justify-center",
+              "aspect-square border border-red-300 flex items-center justify-center transition",
               cell === 1 ? "bg-gray-900 text-white" : "bg-white text-gray-900"
             )}
-          >
-            {cell}
-          </div>
+          />
         ))}
       </div>
       <div className="grid aspect-square grid-cols-5 gap-1 grid-rows-5 w-80">
@@ -25,18 +23,24 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
               <div
                 key={colIndex + rowIndex}
                 className={cx(
-                  "aspect-square border flex items-center justify-center",
+                  "aspect-square border flex items-center justify-center transition",
                   cell === 1
                     ? "bg-gray-900 text-white"
-                    : "bg-white text-gray-900"
+                    : "bg-white text-gray-900",
+                  css({
+                    transitionDelay:
+                      ctx.activePlayers?.[ctx.currentPlayer] === "viewChanges"
+                        ? `${colIndex * 0.3}s`
+                        : undefined,
+                  })
                 )}
-              >
-                {cell}
-              </div>
+              />
             );
           })
         )}
       </div>
+
+      <Scores G={G} />
     </div>
   );
 }
@@ -56,7 +60,8 @@ function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
                     key={rule + i}
                     className={cx(
                       "size-4 border",
-                      rule === "1" ? "bg-gray-900" : "bg-white"
+                      rule === "1" ? "bg-gray-900" : "bg-white",
+                      i === 1 && "border-red-300"
                     )}
                   />
                 ))}
@@ -85,6 +90,19 @@ function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
           End Turn!
         </button>
       )}
+    </div>
+  );
+}
+
+function Scores({ G }: Pick<GameProps, "G">) {
+  return (
+    <div className="grid grid-cols-2 gap-1">
+      {Object.entries(G.score).map(([playerID, score]) => (
+        <div key={playerID} className="flex items-center gap-1">
+          <span>Player {playerID}:</span>
+          <span>{score}</span>
+        </div>
+      ))}
     </div>
   );
 }

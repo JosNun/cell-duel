@@ -32,13 +32,14 @@ interface GameState {
   cellRules: CellRules;
   cells: BoardState;
   lastRow: RowState;
+  score: Record<string, number>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GameProps extends BoardProps<GameState> {}
 
 export const TicTacToe: Game<GameState> = {
-  setup: ({ random }) => {
+  setup: ({ random, ctx }) => {
     const lastRow = Array(5)
       .fill(null)
       .map(() => Math.round(random.Number())) as RowState;
@@ -56,6 +57,10 @@ export const TicTacToe: Game<GameState> = {
       } as CellRules,
       cells: Array(5).fill(Array(5).fill(0)) as BoardState,
       lastRow,
+      score: ctx.playOrder.reduce((acc, playerID) => {
+        acc[playerID] = 0;
+        return acc;
+      }, {} as Record<string, number>),
     };
   },
 
@@ -82,7 +87,11 @@ export const TicTacToe: Game<GameState> = {
       },
       viewChanges: {
         moves: {
-          endTurn: ({ G, events }) => {
+          endTurn: ({ events, G, playerID }) => {
+            G.score[playerID] += G.cells
+              .flat()
+              .reduce((acc, cell) => acc + cell, 0 as number);
+
             events.endTurn();
           },
         },
