@@ -87,10 +87,14 @@ export const TicTacToe: Game<GameState> = {
       },
       viewChanges: {
         moves: {
-          endTurn: ({ events, G, playerID }) => {
-            G.score[playerID] += G.cells
-              .flat()
-              .reduce((acc, cell) => acc + cell, 0 as number);
+          endTurn: ({ events, G, playerID, ctx }) => {
+            G.score[playerID] += G.cells.flat().reduce((acc, cell) => {
+              if (playerID === ctx.playOrder[0]) {
+                return acc + cell;
+              } else {
+                return acc + (1 - cell);
+              }
+            }, 0 as number);
 
             events.endTurn();
           },
@@ -121,7 +125,7 @@ function computeRows(
     const newRow = cells[i].map((_cell, j) => {
       const left = prevRow[j - 1] ?? 0;
       const center = prevRow[j];
-      const right = prevRow[j + 1] ?? 0;
+      const right = prevRow[j + 1] ?? 1;
 
       return cellRules[`${left}${center}${right}`];
     }) as RowState;

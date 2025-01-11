@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { GameProps, RuleItem } from "./Game";
 import { css, cx } from "@emotion/css";
 
@@ -5,42 +6,73 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
   return (
     <div className="max-h-screen space-y-2 overflow-hidden">
       <CellRules G={G} moves={moves} ctx={ctx} />
-      <div className="grid grid-cols-5 gap-1 w-80">
-        {G.lastRow.map((cell, index) => (
-          <div
-            key={index}
-            className={cx(
-              "aspect-square border border-red-300 flex items-center justify-center transition",
-              cell === 1 ? "bg-gray-900 text-white" : "bg-white text-gray-900"
-            )}
-          />
-        ))}
-      </div>
-      <div className="grid aspect-square grid-cols-5 gap-1 grid-rows-5 w-80">
-        {G.cells.map((col, colIndex) =>
-          col.map((cell, rowIndex) => {
+      <div className="w-80 space-y-2">
+        <div className="grid grid-cols-7 gap-1">
+          <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
+            <Lock className="opacity-30" />
+          </div>
+          <div className="border border-red-300 contents">
+            {G.lastRow.map((cell, index) => {
+              return (
+                <div
+                  key={index}
+                  className={cx(
+                    "aspect-square flex items-center border justify-center transition",
+                    cell === 1
+                      ? "bg-gray-900 text-white"
+                      : "bg-white text-gray-900"
+                  )}
+                />
+              );
+            })}
+          </div>
+          <div className="aspect-square border flex items-center justify-center transition bg-gray-900 text-white">
+            <Lock className="opacity-30" />
+          </div>
+        </div>
+        <hr />
+        <div className="grid aspect-square grid-cols-7 gap-1 grid-rows-5">
+          {G.cells.map((col, colIndex) => {
             return (
-              <div
-                key={colIndex + rowIndex}
-                className={cx(
-                  "aspect-square border flex items-center justify-center transition",
-                  cell === 1
-                    ? "bg-gray-900 text-white"
-                    : "bg-white text-gray-900",
-                  css({
-                    transitionDelay:
-                      ctx.activePlayers?.[ctx.currentPlayer] === "viewChanges"
-                        ? `${colIndex * 0.3}s`
-                        : undefined,
-                  })
-                )}
-              />
+              <>
+                <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
+                  <Lock className="opacity-30" />
+                </div>
+                {col.map((cell, rowIndex) => {
+                  return (
+                    <div
+                      key={
+                        "" +
+                        colIndex +
+                        rowIndex +
+                        (ctx.activePlayers?.[ctx.currentPlayer] ?? "")
+                      }
+                      className={cx(
+                        "aspect-square border flex items-center justify-center transition",
+                        cell === 1
+                          ? "bg-gray-900 text-white"
+                          : "bg-white text-gray-900",
+                        css({
+                          transitionDelay:
+                            ctx.activePlayers?.[ctx.currentPlayer] ===
+                            "viewChanges"
+                              ? `${colIndex * 0.3}s`
+                              : undefined,
+                        })
+                      )}
+                    />
+                  );
+                })}
+                <div className="aspect-square border flex items-center justify-center transition bg-gray-900 text-white">
+                  <Lock className="opacity-30" />
+                </div>
+              </>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
 
-      <Scores G={G} />
+      <Scores G={G} ctx={ctx} />
     </div>
   );
 }
@@ -48,7 +80,7 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
 function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
   return (
     <div>
-      <div className="grid grid-cols-8 gap-1">
+      <div className="grid grid-rows-8 gap-1">
         {Object.entries(G.cellRules).map(([rule, value]) => {
           const rules = rule.split("") as [RuleItem, RuleItem, RuleItem];
 
@@ -94,12 +126,26 @@ function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
   );
 }
 
-function Scores({ G }: Pick<GameProps, "G">) {
+function playerIdToName(playerId: string) {
+  if (playerId === "0") {
+    return "Black";
+  } else {
+    return "White";
+  }
+}
+
+function Scores({ G, ctx }: Pick<GameProps, "G" | "ctx">) {
   return (
     <div className="grid grid-cols-2 gap-1">
       {Object.entries(G.score).map(([playerID, score]) => (
         <div key={playerID} className="flex items-center gap-1">
-          <span>Player {playerID}:</span>
+          <div
+            className={cx(
+              "size-3 rounded-full",
+              ctx.activePlayers?.[playerID] && "bg-black"
+            )}
+          ></div>
+          <span>{playerIdToName(playerID)} player:</span>
           <span>{score}</span>
         </div>
       ))}
