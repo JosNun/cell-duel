@@ -33,6 +33,7 @@ interface GameState {
   cells: BoardState;
   lastRow: RowState;
   score: Record<string, number>;
+  genRuleChangesRemaining: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -61,6 +62,7 @@ export const TicTacToe: Game<GameState> = {
         acc[playerID] = 0;
         return acc;
       }, {} as Record<string, number>),
+      genRuleChangesRemaining: 0,
     };
   },
 
@@ -68,6 +70,9 @@ export const TicTacToe: Game<GameState> = {
 
   turn: {
     activePlayers: { currentPlayer: "updateRules" },
+    onBegin: ({ G }) => {
+      G.genRuleChangesRemaining = 1;
+    },
     onEnd({ G }) {
       G.lastRow = G.cells[G.cells.length - 1];
       G.cells = Array(5).fill(blankRowState) as BoardState;
@@ -77,7 +82,10 @@ export const TicTacToe: Game<GameState> = {
         next: "viewChanges",
         moves: {
           clickCell: ({ G }, rule: RuleString) => {
-            G.cellRules[rule] = G.cellRules[rule] === 1 ? 0 : 1;
+            if (G.genRuleChangesRemaining > 0) {
+              G.cellRules[rule] = G.cellRules[rule] === 1 ? 0 : 1;
+              G.genRuleChangesRemaining -= 1;
+            }
           },
           submitRules: ({ G, events }) => {
             G.cells = computeRows(G.cellRules, G.cells, G.lastRow);

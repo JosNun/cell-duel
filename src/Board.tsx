@@ -1,11 +1,18 @@
 import { Lock } from "lucide-react";
 import { GameProps, RuleItem } from "./Game";
 import { css, cx } from "@emotion/css";
+import { Fragment } from "react/jsx-runtime";
 
-export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
+export function TicTacToeBoard({ G, moves, ctx, undo }: GameProps) {
   return (
     <div className="max-h-screen space-y-2 overflow-hidden">
-      <CellRules G={G} moves={moves} ctx={ctx} />
+      <div className="grid grid-cols-2">
+        <div className="">
+          <div>Generation Rules</div>
+          <CellRules G={G} moves={moves} ctx={ctx} undo={undo} />
+        </div>
+        <Scores G={G} ctx={ctx} />
+      </div>
       <div className="w-80 space-y-2">
         <div className="grid grid-cols-7 gap-1">
           <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
@@ -34,19 +41,14 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
         <div className="grid aspect-square grid-cols-7 gap-1 grid-rows-5">
           {G.cells.map((col, colIndex) => {
             return (
-              <>
+              <Fragment key={colIndex}>
                 <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
                   <Lock className="opacity-30" />
                 </div>
                 {col.map((cell, rowIndex) => {
                   return (
                     <div
-                      key={
-                        "" +
-                        colIndex +
-                        rowIndex +
-                        (ctx.activePlayers?.[ctx.currentPlayer] ?? "")
-                      }
+                      key={"" + colIndex + rowIndex}
                       className={cx(
                         "aspect-square border flex items-center justify-center transition",
                         cell === 1
@@ -66,21 +68,29 @@ export function TicTacToeBoard({ G, moves, ctx }: GameProps) {
                 <div className="aspect-square border flex items-center justify-center transition bg-gray-900 text-white">
                   <Lock className="opacity-30" />
                 </div>
-              </>
+              </Fragment>
             );
           })}
         </div>
       </div>
-
-      <Scores G={G} ctx={ctx} />
     </div>
   );
 }
 
-function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
+function CellRules({
+  G,
+  moves,
+  ctx,
+  undo,
+}: Pick<GameProps, "G" | "moves" | "ctx" | "undo">) {
   return (
     <div>
-      <div className="grid grid-rows-8 gap-1">
+      <div
+        className={cx(
+          "grid grid-rows-8 gap-1",
+          G.genRuleChangesRemaining === 0 && "opacity-50"
+        )}
+      >
         {Object.entries(G.cellRules).map(([rule, value]) => {
           const rules = rule.split("") as [RuleItem, RuleItem, RuleItem];
 
@@ -89,7 +99,7 @@ function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
               <div className="flex items-center gap-1">
                 {rules.map((rule, i) => (
                   <div
-                    key={rule + i}
+                    key={"" + rule + i}
                     className={cx(
                       "size-4 border",
                       rule === "1" ? "bg-gray-900" : "bg-white",
@@ -111,15 +121,31 @@ function CellRules({ G, moves, ctx }: Pick<GameProps, "G" | "moves" | "ctx">) {
         })}
       </div>
       {ctx.activePlayers?.[ctx.currentPlayer] === "updateRules" ? (
-        <button
-          className="border px-2 py-1"
-          onClick={() => moves.submitRules()}
-        >
-          Go!
-        </button>
+        <div className="flex gap-2">
+          <button
+            className={cx(
+              "border px-2 py-1",
+              G.genRuleChangesRemaining > 0 && "opacity-50"
+            )}
+            disabled={G.genRuleChangesRemaining > 0}
+            onClick={() => undo()}
+          >
+            Undo
+          </button>
+          <button
+            className={cx(
+              "border px-2 py-1",
+              G.genRuleChangesRemaining > 0 && "opacity-50"
+            )}
+            onClick={() => moves.submitRules()}
+            disabled={G.genRuleChangesRemaining > 0}
+          >
+            Go!
+          </button>
+        </div>
       ) : (
         <button className="border px-2 py-1" onClick={() => moves.endTurn()}>
-          End Turn!
+          End Turn
         </button>
       )}
     </div>
@@ -136,7 +162,8 @@ function playerIdToName(playerId: string) {
 
 function Scores({ G, ctx }: Pick<GameProps, "G" | "ctx">) {
   return (
-    <div className="grid grid-cols-2 gap-1">
+    <div className="">
+      <div>Score:</div>
       {Object.entries(G.score).map(([playerID, score]) => (
         <div key={playerID} className="flex items-center gap-1">
           <div
@@ -145,7 +172,7 @@ function Scores({ G, ctx }: Pick<GameProps, "G" | "ctx">) {
               ctx.activePlayers?.[playerID] && "bg-black"
             )}
           ></div>
-          <span>{playerIdToName(playerID)} player:</span>
+          <span>{playerIdToName(playerID)}:</span>
           <span>{score}</span>
         </div>
       ))}
