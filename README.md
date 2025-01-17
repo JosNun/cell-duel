@@ -1,50 +1,15 @@
-# React + TypeScript + Vite
+# 🎮 Cell Duel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🦠 1-dimensional cellular automata based game.
 
-Currently, two official plugins are available:
+Dabbling with cellular automata has been floating around in my head for a while. Then I discovered [boardgame.io](https://boardgame.io/).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Seemed like a good opportunity to tick two things off my list, and Cell Duel was born.
 
-## Expanding the ESLint configuration
+## ⚠️ Note:
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+This is a hobby project not intended for public consumption. As such, the code will be jank, the UI will be jank, and pretty much everything else will be jank, too. I don't have a goal other than to have fun, so I'm not going to worry about any of that.
 
-- Configure the top-level `parserOptions` property like this:
+# 🤝 Contributing
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+PRs welcome, just ask first 😊
