@@ -8,12 +8,12 @@ import { GameProvider } from "./gameContextProvider";
 export function GameBoard(props: GameProps) {
   return (
     <GameProvider {...props}>
-      <TicTacToeBoard />
+      <CellDuelBoard />
     </GameProvider>
   );
 }
 
-export function TicTacToeBoard() {
+export function CellDuelBoard() {
   const { G, ctx } = useGame();
 
   return (

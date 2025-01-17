@@ -39,7 +39,7 @@ interface GameState {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GameProps extends BoardProps<GameState> {}
 
-export const TicTacToe: Game<GameState> = {
+export const CellDuel: Game<GameState> = {
   setup: ({ random, ctx }) => {
     const lastRow = Array(5)
       .fill(null)
