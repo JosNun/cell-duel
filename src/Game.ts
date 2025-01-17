@@ -1,11 +1,12 @@
-import { Game } from "boardgame.io";
+import { Ctx, Game } from "boardgame.io";
+import { RandomAPI } from "boardgame.io/dist/types/src/plugins/random/random";
 import type { BoardProps } from "boardgame.io/react";
 
 type CellState = 1 | 0;
 
-type RowState = [CellState, CellState, CellState, CellState, CellState];
+type RowState = CellState[];
 
-type BoardState = [RowState, RowState, RowState, RowState, RowState];
+type BoardState = RowState[];
 
 export type RuleItem = "1" | "0";
 
@@ -26,9 +27,18 @@ export const cellRules: CellRules = {
   "111": 0,
 };
 
-const blankRowState = [0, 0, 0, 0, 0] as RowState;
+function getBlankRow(length: number): RowState {
+  return new Array(length).fill(null).map(() => 0) as RowState;
+}
+
+interface SetupArgs {
+  xSize: number;
+  ySize: number;
+}
 
 interface GameState {
+  setupArgs: SetupArgs;
+
   cellRules: CellRules;
   cells: BoardState;
   lastRow: RowState;
@@ -39,43 +49,88 @@ interface GameState {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface GameProps extends BoardProps<GameState> {}
 
+function initGameState(
+  ctx: Ctx,
+  random: RandomAPI,
+  G: Omit<
+    GameState,
+    "cellRules" | "cells" | "lastRow" | "score" | "genRuleChangesRemaining"
+  > &
+    Partial<GameState>,
+  setupArgs: SetupArgs = {
+    xSize: 5,
+    ySize: 5,
+  }
+): void {
+  const lastRow = Array(setupArgs.xSize)
+    .fill(null)
+    .map(() => Math.round(random.Number())) as RowState;
+
+  G.cellRules = {
+    "000": Math.round(random.Number()) as CellState,
+    "001": Math.round(random.Number()) as CellState,
+    "010": Math.round(random.Number()) as CellState,
+    "011": Math.round(random.Number()) as CellState,
+    "100": Math.round(random.Number()) as CellState,
+    "101": Math.round(random.Number()) as CellState,
+    "110": Math.round(random.Number()) as CellState,
+    "111": Math.round(random.Number()) as CellState,
+  };
+
+  G.cells = Array(setupArgs.ySize).fill(
+    getBlankRow(setupArgs.xSize)
+  ) as BoardState;
+
+  G.lastRow = lastRow;
+
+  G.score = ctx.playOrder.reduce((acc, playerID) => {
+    acc[playerID] = 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  G.genRuleChangesRemaining = 0;
+}
+
 export const CellDuel: Game<GameState> = {
   setup: ({ random, ctx }) => {
-    const lastRow = Array(5)
-      .fill(null)
-      .map(() => Math.round(random.Number())) as RowState;
+    const initialState = {
+      setupArgs: {
+        xSize: 5,
+        ySize: 5,
+      },
+    } satisfies Partial<GameState>;
 
-    return {
-      cellRules: {
-        "000": Math.round(random.Number()) as CellState,
-        "001": Math.round(random.Number()) as CellState,
-        "010": Math.round(random.Number()) as CellState,
-        "011": Math.round(random.Number()) as CellState,
-        "100": Math.round(random.Number()) as CellState,
-        "101": Math.round(random.Number()) as CellState,
-        "110": Math.round(random.Number()) as CellState,
-        "111": Math.round(random.Number()) as CellState,
-      } as CellRules,
-      cells: Array(5).fill(Array(5).fill(0)) as BoardState,
-      lastRow,
-      score: ctx.playOrder.reduce((acc, playerID) => {
-        acc[playerID] = 0;
-        return acc;
-      }, {} as Record<string, number>),
-      genRuleChangesRemaining: 0,
-    };
+    initGameState(ctx, random, initialState);
+
+    return initialState as GameState;
   },
 
   moves: {},
 
+  phases: {
+    setup: {
+      turn: {
+        activePlayers: { currentPlayer: "all" },
+      },
+      moves: {
+        startGame: ({ ctx, random, G, events }, setupArgs: SetupArgs) => {
+          initGameState(ctx, random, G, setupArgs);
+          events.endPhase();
+        },
+      },
+      start: true,
+      next: "play",
+    },
+    play: {},
+  },
   turn: {
     activePlayers: { currentPlayer: "updateRules" },
     onBegin: ({ G }) => {
       G.genRuleChangesRemaining = 1;
     },
     onEnd({ G }) {
-      G.lastRow = G.cells[G.cells.length - 1];
-      G.cells = Array(5).fill(blankRowState) as BoardState;
+      G.lastRow = [...G.cells[G.cells.length - 1]];
+      G.cells = G.cells.map((row) => [...row].fill(0));
     },
     stages: {
       updateRules: {
@@ -119,14 +174,9 @@ function computeRows(
   cells: BoardState,
   lastRow: RowState
 ): BoardState {
-  const newRows: BoardState = [
-    blankRowState,
-    blankRowState,
-    blankRowState,
-    blankRowState,
-    blankRowState,
-  ];
-
+  const newRows: BoardState = Array(cells.length).fill(
+    getBlankRow(cells[0].length)
+  ) as BoardState;
   for (let i = 0; i < cells.length; i++) {
     const prevRow = i === 0 ? lastRow : newRows[i - 1];
 

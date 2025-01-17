@@ -4,16 +4,64 @@ import { css, cx } from "@emotion/css";
 import { Fragment } from "react/jsx-runtime";
 import { useGame } from "./gameContext";
 import { GameProvider } from "./gameContextProvider";
+import { useState } from "react";
 
 export function GameBoard(props: GameProps) {
   return (
     <GameProvider {...props}>
-      <CellDuelBoard />
+      {props.ctx.phase === "setup" ? <Setup /> : <CellDuelBoard />}
     </GameProvider>
   );
 }
 
-export function CellDuelBoard() {
+function Setup() {
+  const { moves } = useGame();
+
+  const [xSize, setXSize] = useState(5);
+  const [ySize, setYSize] = useState(5);
+
+  return (
+    <div>
+      <label className="select-none">
+        <div>Board Width</div>
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={5}
+            max={30}
+            value={xSize}
+            onChange={(e) => setXSize(parseInt(e.target.value))}
+          />
+          <span>{xSize}</span>
+        </div>
+      </label>
+      <label className="select-none">
+        <div>Board Height</div>
+        <div className="flex items-center gap-2">
+          <input
+            type="range"
+            min={3}
+            max={30}
+            value={ySize}
+            onChange={(e) => setYSize(parseInt(e.target.value))}
+          />
+          <span>{ySize}</span>
+        </div>
+      </label>
+
+      <button
+        className="px-2 py-1 border"
+        onClick={() => {
+          moves["startGame"]({ xSize, ySize });
+        }}
+      >
+        Start
+      </button>
+    </div>
+  );
+}
+
+function CellDuelBoard() {
   const { G, ctx } = useGame();
 
   return (
@@ -26,8 +74,17 @@ export function CellDuelBoard() {
         <Scores />
       </div>
       <div className="w-80 space-y-2">
-        <div className="grid grid-cols-7 gap-1">
-          <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
+        <div
+          className={cx(
+            "grid gap-0.5",
+            css({
+              gridTemplateColumns: `repeat(${
+                G.cells[0].length + 2
+              }, minmax(0, 1fr))`,
+            })
+          )}
+        >
+          <div className="aspect-square border flex min-h-0 items-center justify-center transition bg-white text-gray-900">
             <Lock className="opacity-30" />
           </div>
           <div className="border border-red-300 contents">
@@ -36,7 +93,7 @@ export function CellDuelBoard() {
                 <div
                   key={index}
                   className={cx(
-                    "aspect-square flex items-center border justify-center transition",
+                    "aspect-square flex items-center border min-h-0 justify-center transition",
                     cell === 1
                       ? "bg-gray-900 text-white"
                       : "bg-white text-gray-900"
@@ -45,16 +102,26 @@ export function CellDuelBoard() {
               );
             })}
           </div>
-          <div className="aspect-square border flex items-center justify-center transition bg-gray-900 text-white">
+          <div className="aspect-square border flex min-h-0 items-center justify-center transition bg-gray-900 text-white">
             <Lock className="opacity-30" />
           </div>
         </div>
         <hr />
-        <div className="grid aspect-square grid-cols-7 gap-1 grid-rows-5">
+        <div
+          className={cx(
+            "grid gap-0.5",
+            css({
+              gridTemplateColumns: `repeat(${
+                G.cells[0].length + 2
+              }, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${G.cells.length}, minmax(0, 1fr))`,
+            })
+          )}
+        >
           {G.cells.map((col, colIndex) => {
             return (
               <Fragment key={colIndex}>
-                <div className="aspect-square border flex items-center justify-center transition bg-white text-gray-900">
+                <div className="aspect-square min-h-0 border flex items-center justify-center transition bg-white text-gray-900">
                   <Lock className="opacity-30" />
                 </div>
                 {col.map((cell, rowIndex) => {
@@ -62,7 +129,7 @@ export function CellDuelBoard() {
                     <div
                       key={"" + colIndex + rowIndex}
                       className={cx(
-                        "aspect-square border flex items-center justify-center transition",
+                        "aspect-square border flex min-h-0 items-center justify-center transition",
                         cell === 1
                           ? "bg-gray-900 text-white"
                           : "bg-white text-gray-900",
@@ -70,14 +137,14 @@ export function CellDuelBoard() {
                           transitionDelay:
                             ctx.activePlayers?.[ctx.currentPlayer] ===
                             "viewChanges"
-                              ? `${colIndex * 0.3}s`
+                              ? `${colIndex * (1 / G.setupArgs.ySize) * 0.5}s`
                               : undefined,
                         })
                       )}
                     />
                   );
                 })}
-                <div className="aspect-square border flex items-center justify-center transition bg-gray-900 text-white">
+                <div className="aspect-square border min-h-0 flex items-center justify-center transition bg-gray-900 text-white">
                   <Lock className="opacity-30" />
                 </div>
               </Fragment>
@@ -96,7 +163,7 @@ function CellRules() {
     <div>
       <div
         className={cx(
-          "grid grid-rows-8 gap-1",
+          "grid grid-rows-8 gap-0.5",
           G.genRuleChangesRemaining === 0 && "opacity-50"
         )}
       >
