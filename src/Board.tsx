@@ -2,16 +2,28 @@ import { Lock } from "lucide-react";
 import { GameProps, RuleItem } from "./Game";
 import { css, cx } from "@emotion/css";
 import { Fragment } from "react/jsx-runtime";
+import { useGame } from "./gameContext";
+import { GameProvider } from "./gameContextProvider";
 
-export function TicTacToeBoard({ G, moves, ctx, undo }: GameProps) {
+export function GameBoard(props: GameProps) {
+  return (
+    <GameProvider {...props}>
+      <TicTacToeBoard />
+    </GameProvider>
+  );
+}
+
+export function TicTacToeBoard() {
+  const { G, ctx } = useGame();
+
   return (
     <div className="max-h-screen space-y-2 overflow-hidden">
       <div className="grid grid-cols-2">
         <div className="">
           <div>Generation Rules</div>
-          <CellRules G={G} moves={moves} ctx={ctx} undo={undo} />
+          <CellRules />
         </div>
-        <Scores G={G} ctx={ctx} />
+        <Scores />
       </div>
       <div className="w-80 space-y-2">
         <div className="grid grid-cols-7 gap-1">
@@ -77,12 +89,9 @@ export function TicTacToeBoard({ G, moves, ctx, undo }: GameProps) {
   );
 }
 
-function CellRules({
-  G,
-  moves,
-  ctx,
-  undo,
-}: Pick<GameProps, "G" | "moves" | "ctx" | "undo">) {
+function CellRules() {
+  const { G, moves, ctx, undo } = useGame();
+
   return (
     <div>
       <div
@@ -160,7 +169,9 @@ function playerIdToName(playerId: string) {
   }
 }
 
-function Scores({ G, ctx }: Pick<GameProps, "G" | "ctx">) {
+function Scores() {
+  const { G, ctx } = useGame();
+
   return (
     <div className="">
       <div>Score:</div>
